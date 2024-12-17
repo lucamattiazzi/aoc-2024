@@ -158,7 +158,6 @@ def get_diff(multipliers):
 
 
 while True:
-    time.sleep(0.05)
     if idx < 0:
         break
 
@@ -169,7 +168,7 @@ while True:
     correct_value = instructions[idx]
     computed_input = min_reg_a
     found = False
-    for power in range(multipliers[idx], multipliers[idx] + 8):
+    for power in range(0, 8):
         multipliers[idx] = power
         computed_input = multipliers_to_input(multipliers)
         computed_output = produce(computed_input)
@@ -178,12 +177,10 @@ while True:
             found = True
             break
 
-    if multipliers[idx] > 64:
-        idx += 2
-    elif found:
+    if found:
         idx -= 1
     else:
-        idx += 1
+        multipliers[idx + 1] += 1
 
 print(multipliers)
 computed_input = multipliers_to_input(multipliers)
