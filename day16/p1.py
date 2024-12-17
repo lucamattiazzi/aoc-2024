@@ -55,7 +55,7 @@ start_node = (start_coords, start_direction, start_coords)
 G.add_node(start_node)
 build_graph(matrix, G, start_node)
 
-winning_paths = []
+winning_path = None
 winning_weight = np.inf
 
 for end_node in end_nodes:
@@ -67,17 +67,13 @@ for end_node in end_nodes:
     )
 
     if shortest_path_weight < winning_weight:
-        winning_paths = [*shortest_paths]
+        winning_path = shortest_paths
         winning_weight = shortest_path_weight
 
-    if shortest_path_weight == winning_weight:
-        winning_paths = [*winning_paths, *shortest_paths]
-
-for winning_path in winning_paths:
-    for node in winning_path:
-        coords, direction, _ = node
-        matrix[coords] = "O"
+for node in winning_path:
+    coords, direction, _ = node
+    matrix[coords] = "O"
 print_matrix(matrix)
 print("\n\n")
 
-print(np.sum(matrix == "O"))
+print(winning_weight)
