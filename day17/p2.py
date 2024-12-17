@@ -164,7 +164,6 @@ while True:
     if idx != 0:
         multipliers[0 : idx - 1] = [0] * len(multipliers[0 : idx - 1])
 
-    print(get_diff(multipliers))
     correct_value = instructions[idx]
     computed_input = min_reg_a
     found = False
