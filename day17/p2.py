@@ -1,6 +1,8 @@
 import math
 import time
-from itertools import batched, product
+from itertools import batched
+
+import numpy as np
 
 with open("./day17/data1.txt", "r") as file:
     registers, instructions = file.read().split("\n\n")
@@ -129,33 +131,62 @@ for i in range(min_reg_a, max_reg_a):
     cpu = CPU(i, reg_b, reg_c, instructions)
     result = cpu.run_op()
     first_values.append(result[0])
-    if i == min_reg_a + 100000:
+    if i == min_reg_a + 10000:
         break
 
 period = get_period(first_values)
+starting = CPU(min_reg_a, reg_b, reg_c, instructions).run_op()
 
-possible_solutions = []
 
-for idx, value in enumerate(instructions[0:3]):
-    indices = [jdx for jdx, val in enumerate(period) if val == value]
-    valid_solutions = []
-    for index in indices:
-        iteration = min_reg_a + index * (8**idx)
-        cpu = CPU(iteration, reg_b, reg_c, instructions)
-        res = cpu.run_op()
-        if res[idx] == instructions[idx]:
-            valid_solutions.append(index)
-        else:
-            print(f"{iteration} not valid")
-    possible_solutions.append(valid_solutions)
+def produce(i):
+    return CPU(i, reg_b, reg_c, instructions).run_op()
 
-for solution in product(*possible_solutions):
-    iteration = 0
-    for idx, val in enumerate(solution):
-        iteration += val * (8**idx)
-    if iteration > max_reg_a or iteration < min_reg_a:
-        continue
-    cpu = CPU(iteration, reg_b, reg_c, instructions)
-    res = cpu.run_op()
-    if res[0:3] == instructions[0:3]:
-        breakpoint()
+
+multipliers = [0] * len(instructions)
+idx = len(instructions) - 1
+
+
+def multipliers_to_input(multipliers):
+    start = min_reg_a
+    for idx, mult in enumerate(multipliers):
+        start += mult * (8**idx)
+    return start
+
+
+def get_diff(multipliers):
+    return np.array(instructions) - np.array(produce(multipliers_to_input(multipliers)))
+
+
+while True:
+    time.sleep(0.05)
+    if idx < 0:
+        break
+
+    if idx != 0:
+        multipliers[0 : idx - 1] = [0] * len(multipliers[0 : idx - 1])
+
+    print(get_diff(multipliers))
+    correct_value = instructions[idx]
+    computed_input = min_reg_a
+    found = False
+    for power in range(multipliers[idx], multipliers[idx] + 8):
+        multipliers[idx] = power
+        computed_input = multipliers_to_input(multipliers)
+        computed_output = produce(computed_input)
+
+        if computed_output[idx:] == instructions[idx:]:
+            found = True
+            break
+
+    if multipliers[idx] > 64:
+        idx += 2
+    elif found:
+        idx -= 1
+    else:
+        idx += 1
+
+print(multipliers)
+computed_input = multipliers_to_input(multipliers)
+computed_output = produce(computed_input)
+print(computed_input, computed_output)
+print(get_diff(multipliers))

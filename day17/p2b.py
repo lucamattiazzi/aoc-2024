@@ -2,6 +2,8 @@ import math
 import time
 from itertools import batched
 
+import numpy as np
+
 with open("./day17/data1.txt", "r") as file:
     registers, instructions = file.read().split("\n\n")
     reg_a, reg_b, reg_c = registers.split("\n")
@@ -125,24 +127,76 @@ def get_period(values):
             return first
 
 
-with open("./day17/resbig.txt", "a") as file:
-    for i in range(min_reg_a, max_reg_a):
-        cpu = CPU(i, reg_b, reg_c, instructions)
-        result = cpu.run_op()
-        first_values.append(result[0])
-        file.write("".join([]))
-        if i == min_reg_a + 1000000:
-            break
-
+for i in range(min_reg_a, max_reg_a):
+    cpu = CPU(i, reg_b, reg_c, instructions)
+    result = cpu.run_op()
+    first_values.append(result[0])
+    if i == min_reg_a + 10000:
+        break
 
 period = get_period(first_values)
-iteration = 0
+starting = CPU(min_reg_a, reg_b, reg_c, instructions).run_op()
 
-for idx, value in enumerate(instructions):
-    index = period.index(value)
-    iteration += index * (8**idx)
 
-print(iteration)
-cpu = CPU(iteration, reg_b, reg_c, instructions)
-result = cpu.run_op()
-print(result)
+def produce(i):
+    return CPU(i, reg_b, reg_c, instructions).run_op()
+
+
+multipliers = [0] * len(instructions)
+idx = 0
+
+
+def multipliers_to_input(multipliers):
+    start = min_reg_a
+    for idx, mult in enumerate(multipliers):
+        start += mult * (8**idx)
+    return start
+
+
+def get_diff(multipliers):
+    return np.array(instructions) - np.array(produce(multipliers_to_input(multipliers)))
+
+
+while True:
+    if idx == len(multipliers):
+        break
+
+    # if idx != 0:
+    #     multipliers[idx:] = [0] * len(multipliers[idx:])
+
+    print(get_diff(multipliers))
+    correct_value = instructions[idx]
+    computed_input = min_reg_a
+    found = False
+    for power in range(multipliers[idx], multipliers[idx] + 8):
+        multipliers[idx] = power
+        computed_input = multipliers_to_input(multipliers)
+        computed_output = produce(computed_input)
+
+        if computed_output[:idx] == instructions[:idx]:
+            found = True
+            break
+
+    # if multipliers[idx] > 64:
+    #     idx -= 2
+    #     idx = max(0, idx)
+    if found:
+        idx += 1
+    else:
+        idx -= 1
+        idx = max(0, idx)
+
+print(multipliers)
+computed_input = multipliers_to_input(multipliers)
+computed_output = produce(computed_input)
+print(computed_input, computed_output)
+print(get_diff(multipliers))
+
+# idx = 1
+# while True:
+#     res = produce(computed_input - 8 * idx)
+#     if res == instructions:
+#         breakpoint()
+#     if idx % 10000 == 0:
+#         print(computed_input - 8 * idx)
+#     idx += 1
